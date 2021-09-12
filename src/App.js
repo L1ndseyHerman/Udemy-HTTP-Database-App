@@ -7,17 +7,11 @@ function App() {
 
   const [movies, setMovies] = useState([]);
 
-  function fetchMoviesHandler() {
-    //  This can take a second object parameter with options, but don't need it here.
-    //  fetch() returns a Promise.
-    //  Is asynchronous automatically?!
-    //  Remember, .then() has something to do w try/catch.
-    fetch('https://swapi.dev/api/films').then(response => {
-      //  response is an object.
-      //  SWAPI data is coming in in JSON form, so easy to turn into JS object!
-      //  .json() is a METHOD?! Converts JSON to an object or something.
-      return response.json();
-    }).then(data => {
+  //  Replacing lots of .then() with async and await.
+  async function fetchMoviesHandler() {
+    //  Anything with an "await" runs on an asynchronous thread or something.
+    const response = await fetch('https://swapi.dev/api/films');
+    const data = await response.json();
       //  Changing the names of some movie properties from what they are in the database
       //  to what u want them to be:
       const transformedMovies = data.results.map(movieData => {
@@ -30,13 +24,6 @@ function App() {
       });
       //  Just want the results array from the data, so here it is:
       setMovies(transformedMovies);
-    });
-
-    //  Could have an "options" object param, but don't need here, bec the default 
-    //  method is "get", which is right for this.
-    /*fetch('https://swapi.dev/api/films', {
-      method
-    });*/
   }
 
   return (
