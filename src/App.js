@@ -1,6 +1,7 @@
 import React, {useEffect, useState, useCallback} from 'react';
 
 import MoviesList from './components/MoviesList';
+import AddMovie from './components/AddMovie';
 import './App.css';
 
 function App() {
@@ -17,9 +18,7 @@ function App() {
 
     try {
       //  Anything with an "await" runs on an asynchronous thread or something.
-      const response = await fetch('https://swapi.dev/api/films');
-      //  Use this mispelled version to check errors:
-      //const response = await fetch('https://swapi.dev/api/film');
+      const response = await fetch('https://udemy-http-database-app-default-rtdb.firebaseio.com/movies.json');
 
       if (!response.ok) {
         //  Could put the server's error message here, like 404, or your own.
@@ -27,19 +26,21 @@ function App() {
       }
 
       const data = await response.json();
+      
+      const loadedMovies = [];
 
-      //  Changing the names of some movie properties from what they are in the database
-      //  to what u want them to be:
-      const transformedMovies = data.results.map(movieData => {
-        return {
-          id: movieData.episode_id,
-          title: movieData.title,
-          openingText: movieData.opening_crawl,
-          releaseDate: movieData.release_date
-        };
-      });
+      //  Since keys are weird randomly-generated hashes, need a for-in loop.
+      for (const key in data) {
+        loadedMovies.push({
+          id: key,
+          title: data[key].title,
+          openingText: data[key].openingText,
+          releaseDate: data[key].releaseDate
+        });
+      }
+
       //  Just want the results array from the data, so here it is:
-      setMovies(transformedMovies);
+      setMovies(loadedMovies);
     } catch(error) {
       setError(error.message);
     }
@@ -49,6 +50,23 @@ function App() {
   useEffect(() => {
     fetchMoviesHandler();
   }, [fetchMoviesHandler]);
+
+  //  This should have error handling same as for getting data, he just wants to keep vid short.
+  async function addMovieHandler(movie) {
+    //  fetch() can also send data, not clean code, but it's pre-coded, so have to do.
+    //  Default method is "Get", switching to "Post" here.
+    //  The body needs to be JSON, which is typically used to exchange data
+    //  btw front-end and back-end.
+    const response = await fetch('https://udemy-http-database-app-default-rtdb.firebaseio.com/movies.json', {
+      method: 'POST',
+      body: JSON.stringify(movie),
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+    const data = await response.json();
+    console.log(data);
+  }
 
   let content = <p>Found no movies.</p>;
 
@@ -66,6 +84,9 @@ function App() {
 
   return (
     <React.Fragment>
+      <section>
+        <AddMovie onAddMovie={addMovieHandler} />
+      </section>
       <section>
         <button onClick={fetchMoviesHandler}>Fetch Movies</button>
       </section>
