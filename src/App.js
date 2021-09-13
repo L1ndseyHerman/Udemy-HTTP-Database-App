@@ -7,15 +7,27 @@ function App() {
 
   const [movies, setMovies] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   //  Replacing lots of .then() with async and await.
   async function fetchMoviesHandler() {
 
     setIsLoading(true);
+    setError(null);
 
-    //  Anything with an "await" runs on an asynchronous thread or something.
-    const response = await fetch('https://swapi.dev/api/films');
-    const data = await response.json();
+    try {
+      //  Anything with an "await" runs on an asynchronous thread or something.
+      const response = await fetch('https://swapi.dev/api/films');
+      //  Use this mispelled version to check errors:
+      //const response = await fetch('https://swapi.dev/api/film');
+
+      if (!response.ok) {
+        //  Could put the server's error message here, like 404, or your own.
+        throw new Error('Something went wrong!');
+      }
+
+      const data = await response.json();
+
       //  Changing the names of some movie properties from what they are in the database
       //  to what u want them to be:
       const transformedMovies = data.results.map(movieData => {
@@ -28,7 +40,24 @@ function App() {
       });
       //  Just want the results array from the data, so here it is:
       setMovies(transformedMovies);
-      setIsLoading(false);
+    } catch(error) {
+      setError(error.message);
+    }
+    setIsLoading(false);
+  }
+
+  let content = <p>Found no movies.</p>;
+
+  if (error) {
+    content = <p>{error}</p>;
+  }
+
+  if (movies.length > 0) {
+    content = <MoviesList movies={movies} />;
+  }
+
+  if (isLoading) {
+    content = <p>Loading...</p>;
   }
 
   return (
@@ -36,11 +65,7 @@ function App() {
       <section>
         <button onClick={fetchMoviesHandler}>Fetch Movies</button>
       </section>
-      <section>
-        {!isLoading && movies.length > 0 && <MoviesList movies={movies} />}
-        {!isLoading && movies.length === 0 && <p>Found no movies.</p>}
-        {isLoading && <p>Loading...</p>}
-      </section>
+      <section>{content}</section>
     </React.Fragment>
   );
 }
